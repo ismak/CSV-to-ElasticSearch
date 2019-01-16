@@ -111,14 +111,15 @@ def main(file_path, delimiter, max_rows, elastic_index, json_struct, datetime_fi
                 for header in headers:
                     if header == datetime_field:
                         datetime_type = dateutil.parser.parse(row[pos])
-                        _data = _data.replace('"%' + header + '%"', '"{:%Y-%m-%dT%H:%M}"'.format(datetime_type))
+                        _data = _data.replace('"%' + header + '%"', '"{:%Y-%m-%dT%H:%M:%SZ}"'.format(datetime_type))
                     else:
                         try:
                             int(row[pos])
-                            _data = _data.replace('"%' + header + '%"', row[pos])
+                            _data = _data.replace('"%' + header + '%"', row[pos].replace("\"","'"))
                         except ValueError:
-                            _data = _data.replace('%' + header + '%', row[pos])
+                            _data = _data.replace('%' + header + '%', row[pos].replace("\"","'"))
                     pos += 1
+                    _data = ''.join(char for char in _data if ord(char) < 128)
                 # Send the request
                 if id_column is not None:
                     index_row = {"index": {"_index": elastic_index,
